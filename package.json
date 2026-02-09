@@ -5,14 +5,15 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
-        "dev": "node src/server.js"
-    }, 
+  "dev": "node src/server.js",
+  "start": "node src/server.js"
+},
     "dependencies": {
         "cors": "^2.8.6",
         "ejs": "^4.0.1",
         "express": "^5.2.1",
         "pdfkit": "^0.17.2",
         "sequelize": "^6.37.7",
-        "sqlite3": "^5.1.7"
+        "sqlite3": "^5.0.2"
     }
 }
