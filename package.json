@@ -5,7 +5,8 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
-        "dev": "node src/server.js"
+        "dev": "node src/server.js",
+        "seed": "node src/database/seeds/seed.js"
     }, 
     "dependencies": {
         "cors": "^2.8.6",
