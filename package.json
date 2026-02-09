@@ -2,8 +2,11 @@
     "name": "dragongamer",
     "version": "1.0.0",
     "description": "",
-    "types": "module",
     "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "dev": "node src/server.js"
+    }, 
     "dependencies": {
         "cors": "^2.8.6",
         "ejs": "^4.0.1",
