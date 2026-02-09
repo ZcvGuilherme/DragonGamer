@@ -1,1 +1,6 @@
 node_modules
+*.sqlite
+*.sqlite3
+/database.sqlite
+src/database/database.sqlite
+
