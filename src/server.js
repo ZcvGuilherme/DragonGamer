@@ -5,8 +5,8 @@ const PORT = 3000;
 
 async function startServer() {
   try {
-    await sequelize.sync({ alter: true });
-    console.log('Banco sincronizado');
+    await sequelize.authenticate();
+    console.log('Banco conectado');
 
     app.listen(PORT, () => {
       console.log(`Servidor rodando na porta ${PORT}`);
