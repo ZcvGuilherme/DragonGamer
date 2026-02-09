@@ -1,6 +1,19 @@
 import app from './app.js';
+import { sequelize } from './database/models/index.js';
 
-app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000');
-});
+const PORT = 3000;
 
+async function startServer() {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log('Banco sincronizado');
+
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Erro ao iniciar servidor:', error);
+  }
+}
+
+startServer();
