@@ -118,7 +118,6 @@ http://localhost:3000
 
 - Banco SQLite gerado localmente
 - Seeds idempotentes
-- Projeto focado em backend e regras de negócio
 
 ## Projeto Acadêmico
 
