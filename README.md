@@ -1,186 +1,132 @@
-# DragonGamer 🎮
+DragonGamer 🎮
 
-Aplicação web **fullstack** para gerenciamento de uma **locadora de jogos**, desenvolvida como projeto acadêmico em equipe.
+Sistema fullstack para gerenciamento de uma locadora de jogos, desenvolvido como projeto acadêmico em equipe.
 
-O sistema permite que um **admin** gerencie jogos e locações, enquanto o **usuário** pode acompanhar seus jogos locados, histórico e possíveis multas por atraso.
+O sistema possui dois perfis: Admin e Usuário, com foco nas regras de negócio de locação de jogos.
 
----
+🛠️ Tecnologias
 
-## 🧠 Visão Geral
+Node.js
 
-O núcleo do sistema é a **Locação**, responsável por relacionar:
+Express
 
-* Pessoa (usuário)
-* Jogo
-* Datas de locação/devolução
-* Multa por atraso
+SQLite
 
-Toda regra de negócio gira em torno dessa entidade.
+Sequelize
 
----
+EJS
 
-## 🛠️ Tecnologias Utilizadas
+ES Modules
 
-* **Node.js**
-* **Express**
-* **SQLite**
-* **Sequelize (ORM)**
-* **EJS**
-* **ES Modules** (`type: module`)
+👥 Perfis
+Admin
 
----
+CRUD completo de jogos
 
-## 👥 Perfis de Usuário
+Criar e finalizar locações
 
-### Admin
+Controle de disponibilidade
 
-* Cadastrar jogos
-* Criar locações
-* Finalizar locações (devolução)
-* Calcular multas automaticamente
+Cálculo automático de multas
 
-### Usuário
+Usuário
 
-* Visualizar jogos locados
-* Ver histórico de locações
-* Consultar multas
+Listar jogos disponíveis
 
----
+Visualizar locações ativas
 
-## 🧩 Modelagem Principal
+Consultar histórico e multas
 
-### Pessoa
+🧩 Modelos Principais
+Pessoa
 
-* nome
-* matrícula (login)
-* senha
-* role (`ADMIN` | `USER`)
+nome
 
-### Jogo
+matrícula
 
-* nome
-* status (`DISPONIVEL` | `INDISPONIVEL`)
+senha
 
-### Locação (núcleo)
+role (ADMIN | USER)
 
-* pessoaId
-* jogoId
-* dataInicio
-* dataEntregaPrevista
-* dataEntregaReal
-* multa
+Jogo
 
----
+nome
 
-## 🔐 Autenticação e Autorização
+ano
 
-* Login simples por **matrícula + senha**
-* Controle de acesso via **middleware por role**
+categoria
 
-Header utilizado:
+capaUrl
 
-```
-x-role: ADMIN | USER
-```
+status (DISPONIVEL | INDISPONIVEL)
 
----
+Locação
 
-## 📂 Estrutura do Projeto
+pessoaId
 
-```
-src/
- ├── app.js
- ├── server.js
- ├── controllers/
- ├── routes/
- ├── middlewares/
- ├── database/
- │    ├── index.js
- │    ├── models/
- │    └── seeds/
-```
+jogoId
 
----
+dataInicio
 
-## 🌱 Seeds (Dados Iniciais)
+dataEntregaPrevista
 
-O projeto utiliza **seeds via Sequelize**, sem CLI.
+dataEntregaReal
 
-### Dados criados:
+multa
 
-* 1 Admin
-* 1 Usuário
-* Jogos iniciais
+🔐 Autenticação e Autorização
 
-Seeds são **idempotentes** (podem ser executadas várias vezes).
+Login por matrícula e senha
 
----
+Controle de acesso via middleware por role
 
-## ▶️ Como Executar o Projeto
+Headers utilizados:
 
-### 1. Instalar dependências
+x-role
+x-user-id
 
-```bash
+🛣️ Principais Rotas
+
+POST /auth/login
+
+GET /jogos
+
+GET /jogos/disponiveis
+
+POST /admin/jogos
+
+PUT /admin/jogos/:id
+
+DELETE /admin/jogos/:id
+
+POST /admin/locacoes
+
+PUT /admin/locacoes/:id/devolucao
+
+GET /user/locacoes/ativas
+
+GET /user/locacoes/historico
+
+▶️ Execução
+
+```sh
 npm install
-```
-
-### 2. Executar seeds (cria banco e dados iniciais)
-
-```bash
 npm run seed
-```
-
-### 3. Subir o servidor
-
-```bash
 npm run dev
 ```
 
-Servidor padrão:
+Servidor:
 
-```
 http://localhost:3000
-```
 
----
+📌 Observações
 
-## 🧪 Testes de API
+Banco SQLite gerado localmente
 
-Exemplo de login:
+Seeds idempotentes
 
-```bash
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{ "matricula": "ADM001", "senha": "123456" }'
-```
+Projeto focado em backend e regras de negócio
 
-Exemplo de criar locação (admin):
+📚 Projeto Acadêmico
 
-```bash
-curl -X POST http://localhost:3000/admin/locacoes \
-  -H "Content-Type: application/json" \
-  -H "x-role: ADMIN" \
-  -d '{ "pessoaId": 1, "jogoId": 1, "dataEntregaPrevista": "2026-02-20" }'
-```
-
----
-
-## ⚠️ Observações Importantes
-
-* Banco é recriado localmente via seeds
-
----
-
-## 📌 Próximas Evoluções (Opcional)
-
-* JWT
-* Middleware de identidade
-* Migrations Sequelize
-* Configuração de multa dinâmica
-* Interface completa em EJS
-
----
-
-## 👨‍💻 Projeto Acadêmico
-
-Desenvolvido de forma incremental, **feature a feature**, respeitando divisão de tarefas e boas práticas de organização de código.
+Desenvolvido de forma incremental, feature a feature, com separação clara de responsabilidades e boas práticas de organização.

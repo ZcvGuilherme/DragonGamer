@@ -1,9 +1,11 @@
+// JogoController.js
 import Jogo from '../database/models/Jogo.js';
+import { Locacao } from '../database/models/index.js';
 
 class JogoController {
 
   async criar(req, res) {
-    const {  nome, ano, categoria, capaUrl } = req.body;
+    const { nome, ano, categoria, capaUrl } = req.body;
 
     if (!nome || !ano || !categoria || !capaUrl) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
@@ -31,6 +33,17 @@ class JogoController {
     }
   }
 
+  async listarDisponiveis(req, res) {
+    try {
+      const jogos = await Jogo.findAll({
+        where: { status: 'DISPONIVEL' }
+      });
+      return res.json(jogos);
+    } catch (error) {
+      return res.status(500).json({ error: 'Erro ao listar jogos disponíveis' });
+    }
+  }
+
   async atualizar(req, res) {
     const { id } = req.params;
     const { nome, ano, categoria, capaUrl } = req.body;
@@ -41,9 +54,7 @@ class JogoController {
     }
 
     if (jogo.status === 'INDISPONIVEL') {
-      return res.status(400).json({
-        error: 'Jogo em locação ativa'
-      });
+      return res.status(400).json({ error: 'Jogo em locação ativa' });
     }
 
     jogo.nome = nome ?? jogo.nome;

@@ -4,16 +4,22 @@ import { authorizeRole } from '../middlewares/authorizeRole.js';
 
 const router = Router();
 
-router.post(
-  '/',
-  authorizeRole('ADMIN'),
-  JogoController.criar
+router.get(
+  '/disponiveis',
+  authorizeRole('USER', 'ADMIN'),
+  JogoController.listarDisponiveis
 );
 
 router.get(
   '/',
-  authorizeRole('ADMIN'),
+  authorizeRole('USER', 'ADMIN'),
   JogoController.listar
+);
+
+router.post(
+  '/',
+  authorizeRole('ADMIN'),
+  JogoController.criar
 );
 
 router.put(
