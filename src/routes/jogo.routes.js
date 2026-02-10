@@ -16,4 +16,16 @@ router.get(
   JogoController.listar
 );
 
+router.put(
+  '/:id',
+  authorizeRole('ADMIN'),
+  JogoController.atualizar
+);
+
+router.delete(
+  '/:id',
+  authorizeRole('ADMIN'),
+  JogoController.deletar
+);
+
 export default router;

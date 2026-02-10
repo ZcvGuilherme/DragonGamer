@@ -26,6 +26,48 @@ class JogoController {
     }
   }
 
+  async atualizar(req, res) {
+    const { id } = req.params;
+    const { nome } = req.body;
+
+    const jogo = await Jogo.findByPk(id);
+    if (!jogo) {
+      return res.status(404).json({ error: 'Jogo não encontrado' });
+    }
+
+    if (jogo.status === 'INDISPONIVEL') {
+      return res.status(400).json({
+        error: 'Jogo em locação ativa'
+      });
+    }
+
+    jogo.nome = nome ?? jogo.nome;
+    await jogo.save();
+
+    return res.json(jogo);
+  }
+
+  async deletar(req, res) {
+    const { id } = req.params;
+
+    const jogo = await Jogo.findByPk(id);
+    if (!jogo) {
+      return res.status(404).json({ error: 'Jogo não encontrado' });
+    }
+
+    const possuiLocacoes = await Locacao.count({
+      where: { jogoId: id }
+    });
+
+    if (possuiLocacoes > 0) {
+      return res.status(400).json({
+        error: 'Jogo possui histórico de locações'
+      });
+    }
+
+    await jogo.destroy();
+    return res.status(204).send();
+  }
 }
 
 export default new JogoController();
