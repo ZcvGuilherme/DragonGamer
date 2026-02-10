@@ -13,6 +13,21 @@ const Jogo = sequelize.define('Jogo', {
     allowNull: false
   },
 
+  ano: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  
+  categoria: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+
+  capaUrl: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+
   status: {
     type: DataTypes.ENUM('DISPONIVEL', 'INDISPONIVEL'),
     defaultValue: 'DISPONIVEL'

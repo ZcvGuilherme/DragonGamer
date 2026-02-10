@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "dev": "node src/server.js",
-        "seed": "node src/database/seeds/seed.js"
+        "seed": "node src/database/seeds/index.js"
     }, 
     "dependencies": {
         "cors": "^2.8.6",
