@@ -157,7 +157,7 @@
 
         async function carregarOpcoes() {
             const [resPessoas, resJogos] = await Promise.all([
-                fetch('/api/user', { headers: { 'x-role': 'ADMIN' } }),
+                fetch('/api/admin/usuarios', { headers: { 'x-role': 'ADMIN' } }),
                 fetch('/api/jogos/disponiveis', { headers: { 'x-role': 'ADMIN' } })
             ]);
             const pessoas = await resPessoas.json();
