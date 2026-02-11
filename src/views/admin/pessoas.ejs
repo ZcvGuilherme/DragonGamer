@@ -22,19 +22,25 @@
             <h2 id="formTitle">Cadastrar Nova Pessoa</h2>
             <form id="formPessoa">
                 <input type="hidden" id="pessoaId">
+
                 <div class="form-group">
                     <label>Nome Completo</label>
                     <input type="text" id="nome" required>
                 </div>
+
                 <div class="form-group">
                     <label>Matrícula</label>
                     <input type="text" id="matricula" required>
                 </div>
+
                 <div class="form-group">
                     <label id="labelSenha">Senha Inicial</label>
                     <input type="password" id="senha">
-                    <small id="senhaHelp" class="senha-help">Deixe em branco para manter a senha atual</small>
+                    <small id="senhaHelp" class="senha-help">
+                        Deixe em branco para manter a senha atual
+                    </small>
                 </div>
+
                 <div class="form-group">
                     <label>Papel (Role)</label>
                     <select id="role">
@@ -42,6 +48,7 @@
                         <option value="ADMIN">Administrador</option>
                     </select>
                 </div>
+
                 <div class="button-group">
                     <button type="submit" id="btnSubmit">Salvar Pessoa</button>
                     <button type="button" id="btnCancel" class="btn-cancel" onclick="resetForm()">Cancelar Edição</button>
@@ -60,119 +67,126 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Preenchido via JS -->
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
 
-    <script>
-        const role = localStorage.getItem('role');
-        if (role !== 'ADMIN') window.location.href = '/login';
+<script>
+    const role = localStorage.getItem('role');
+    if (role !== 'ADMIN') window.location.href = '/login';
 
-        async function excluirPessoa(id) {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (user.id == id) {
-                alert('Você não pode excluir a si mesmo!');
-                return;
-            }
-            if (!confirm('Deseja realmente excluir esta pessoa?')) return;
-            
-            const response = await fetch(`/api/user/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-role': 'ADMIN' }
-            });
-            
-            if (response.ok) {
-                alert('Pessoa excluída com sucesso!');
-                carregarPessoas();
-            } else {
-                const data = await response.json();
-                alert(data.error || 'Erro ao excluir');
-            }
-        }
+    const API_BASE = '/api/admin/usuarios';
 
-        async function carregarPessoas() {
-            const response = await fetch('/api/user', { headers: { 'x-role': 'ADMIN' } });
-            const pessoas = await response.json();
-            
-            const tbody = document.querySelector('#tabelaPessoas tbody');
-            tbody.innerHTML = '';
-            
-            pessoas.forEach(p => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${p.nome}</td>
-                    <td>${p.matricula}</td>
-                    <td>${p.role}</td>
-                    <td>
-                        <button onclick='prepararEdicao(${JSON.stringify(p)})' class="btn-small btn-warning">Editar</button>
-                        <button onclick="excluirPessoa(${p.id})" class="btn-small btn-danger">Excluir</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function prepararEdicao(p) {
-            document.getElementById('formTitle').textContent = 'Editar Pessoa';
-            document.getElementById('pessoaId').value = p.id;
-            document.getElementById('nome').value = p.nome;
-            document.getElementById('matricula').value = p.matricula;
-            document.getElementById('role').value = p.role;
-            document.getElementById('labelSenha').textContent = 'Nova Senha (Opcional)';
-            document.getElementById('senhaHelp').classList.add('show');
-            document.getElementById('btnSubmit').textContent = 'Atualizar Pessoa';
-            document.getElementById('btnCancel').classList.add('show');
-            window.scrollTo(0, 0);
-        }
-
-        function resetForm() {
-            document.getElementById('formTitle').textContent = 'Cadastrar Nova Pessoa';
-            document.getElementById('pessoaId').value = '';
-            document.getElementById('formPessoa').reset();
-            document.getElementById('labelSenha').textContent = 'Senha Inicial';
-            document.getElementById('senhaHelp').classList.remove('show');
-            document.getElementById('btnSubmit').textContent = 'Salvar Pessoa';
-            document.getElementById('btnCancel').classList.remove('show');
-        }
-
-        document.getElementById('formPessoa').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('pessoaId').value;
-            const payload = {
-                nome: document.getElementById('nome').value,
-                matricula: document.getElementById('matricula').value,
-                role: document.getElementById('role').value
-            };
-            
-            const senha = document.getElementById('senha').value;
-            if (senha) payload.senha = senha;
-            
-            const url = id ? `/api/user/${id}` : '/api/user';
-            const method = id ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-role': 'ADMIN'
-                },
-                body: JSON.stringify(payload)
-            });
-            
-            if (response.ok) {
-                alert(id ? 'Pessoa atualizada!' : 'Pessoa cadastrada!');
-                resetForm();
-                carregarPessoas();
-            } else {
-                const data = await response.json();
-                alert(data.error);
-            }
+    async function carregarPessoas() {
+        const response = await fetch(API_BASE, {
+            headers: { 'x-role': 'ADMIN' }
         });
 
-        carregarPessoas();
-    </script>
+        const pessoas = await response.json();
+
+        const tbody = document.querySelector('#tabelaPessoas tbody');
+        tbody.innerHTML = '';
+
+        pessoas.forEach(p => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${p.nome}</td>
+                <td>${p.matricula}</td>
+                <td>${p.role}</td>
+                <td>
+                    <button onclick='prepararEdicao(${JSON.stringify(p)})' class="btn-small btn-warning">Editar</button>
+                    <button onclick="excluirPessoa(${p.id})" class="btn-small btn-danger">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function excluirPessoa(id) {
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (user.id == id) {
+            alert('Você não pode excluir a si mesmo!');
+            return;
+        }
+
+        if (!confirm('Deseja realmente excluir esta pessoa?')) return;
+
+        const response = await fetch(`${API_BASE}/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-role': 'ADMIN' }
+        });
+
+        if (response.ok) {
+            alert('Pessoa excluída com sucesso!');
+            carregarPessoas();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Erro ao excluir');
+        }
+    }
+
+    function prepararEdicao(p) {
+        document.getElementById('formTitle').textContent = 'Editar Pessoa';
+        document.getElementById('pessoaId').value = p.id;
+        document.getElementById('nome').value = p.nome;
+        document.getElementById('matricula').value = p.matricula;
+        document.getElementById('role').value = p.role;
+        document.getElementById('labelSenha').textContent = 'Nova Senha (Opcional)';
+        document.getElementById('senhaHelp').classList.add('show');
+        document.getElementById('btnSubmit').textContent = 'Atualizar Pessoa';
+        document.getElementById('btnCancel').classList.add('show');
+        window.scrollTo(0, 0);
+    }
+
+    function resetForm() {
+        document.getElementById('formTitle').textContent = 'Cadastrar Nova Pessoa';
+        document.getElementById('pessoaId').value = '';
+        document.getElementById('formPessoa').reset();
+        document.getElementById('labelSenha').textContent = 'Senha Inicial';
+        document.getElementById('senhaHelp').classList.remove('show');
+        document.getElementById('btnSubmit').textContent = 'Salvar Pessoa';
+        document.getElementById('btnCancel').classList.remove('show');
+    }
+
+    document.getElementById('formPessoa').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('pessoaId').value;
+
+        const payload = {
+            nome: document.getElementById('nome').value,
+            matricula: document.getElementById('matricula').value,
+            role: document.getElementById('role').value
+        };
+
+        const senha = document.getElementById('senha').value;
+        if (senha) payload.senha = senha;
+
+        const url = id ? `${API_BASE}/${id}` : API_BASE;
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-role': 'ADMIN'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert(id ? 'Pessoa atualizada!' : 'Pessoa cadastrada!');
+            resetForm();
+            carregarPessoas();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Erro na operação');
+        }
+    });
+
+    carregarPessoas();
+</script>
 </body>
 </html>

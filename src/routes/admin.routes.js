@@ -4,34 +4,58 @@ import { authorizeRole } from '../middlewares/authorizeRole.js';
 
 const router = Router();
 
-router.get(
-    '/locacoes',
-    authorizeRole('ADMIN'),
-    AdminController.listarLocacoes
-);
-
 router.post(
-    '/locacoes',
-    authorizeRole('ADMIN'),
-    AdminController.criarLocacao
+  '/usuarios',
+  authorizeRole('ADMIN'),
+  AdminController.criarUsuario
+);
+
+router.get(
+  '/usuarios',
+  authorizeRole('ADMIN'),
+  AdminController.listarUsuarios
 );
 
 router.put(
-    '/locacoes/:id/devolucao',
-    authorizeRole('ADMIN'),
-    AdminController.finalizarLocacao
-);
-
-router.put(
-    '/locacoes/:id',
-    authorizeRole('ADMIN'),
-    AdminController.atualizarLocacao
+  '/usuarios/:id',
+  authorizeRole('ADMIN'),
+  AdminController.atualizarUsuario
 );
 
 router.delete(
-    '/locacoes/:id',
-    authorizeRole('ADMIN'),
-    AdminController.deletarLocacao
+  '/usuarios/:id',
+  authorizeRole('ADMIN'),
+  AdminController.deletarUsuario
+);
+
+router.get(
+  '/locacoes',
+  authorizeRole('ADMIN'),
+  AdminController.listarLocacoes
+);
+
+router.post(
+  '/locacoes',
+  authorizeRole('ADMIN'),
+  AdminController.criarLocacao
+);
+
+router.put(
+  '/locacoes/:id/devolucao',
+  authorizeRole('ADMIN'),
+  AdminController.finalizarLocacao
+);
+
+router.put(
+  '/locacoes/:id',
+  authorizeRole('ADMIN'),
+  AdminController.atualizarLocacao
+);
+
+router.delete(
+  '/locacoes/:id',
+  authorizeRole('ADMIN'),
+  AdminController.deletarLocacao
 );
 
 export default router;
