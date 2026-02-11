@@ -71,6 +71,46 @@ class AdminController {
       return res.status(500).json({ error: 'Erro ao finalizar locação' });
     }
   }
+
+  async listarLocacoes(req, res) {
+    try {
+      const locacoes = await Locacao.findAll({
+        include: [Pessoa, Jogo],
+        order: [['createdAt', 'DESC']]
+      });
+      return res.json(locacoes);
+    } catch (error) {
+      return res.status(500).json({ error: 'Erro ao listar locações' });
+    }
+  }
+
+  async atualizarLocacao(req, res) {
+    const { id } = req.params;
+    const { dataEntregaPrevista } = req.body;
+    try {
+      const locacao = await Locacao.findByPk(id);
+      if (!locacao) return res.status(404).json({ error: 'Locação não encontrada' });
+      
+      locacao.dataEntregaPrevista = dataEntregaPrevista;
+      await locacao.save();
+      return res.json(locacao);
+    } catch (error) {
+      return res.status(500).json({ error: 'Erro ao atualizar locação' });
+    }
+  }
+
+  async deletarLocacao(req, res) {
+    const { id } = req.params;
+    try {
+      const locacao = await Locacao.findByPk(id);
+      if (!locacao) return res.status(404).json({ error: 'Locação não encontrada' });
+      
+      await locacao.destroy();
+      return res.status(204).send();
+    } catch (error) {
+      return res.status(500).json({ error: 'Erro ao excluir locação' });
+    }
+  }
 }
 
 export default new AdminController();
