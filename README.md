@@ -230,4 +230,4 @@ Projeto desenvolvido como trabalho acadêmico em equipe com foco em arquitetura 
 - Isaque Ferreira
 - John Viana
 - Waldiney  Vieira
-- Wellingto Carvalho
+- Wellington Carvalho
