@@ -58,6 +58,9 @@
 
         <div class="card">
             <h2>Lista de Pessoas</h2>
+            <div class="search-filter-bar">
+                <input type="text" id="searchPessoas" placeholder="Pesquisar por nome da pessoa..." oninput="onFiltroChange()">
+            </div>
             <table id="tabelaPessoas">
                 <thead>
                     <tr>
@@ -69,6 +72,8 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <p id="semResultados" class="sem-resultados" style="display:none;">Nenhuma pessoa encontrada.</p>
+            <div class="paginacao" id="paginacaoPessoas"></div>
         </div>
     </div>
 
@@ -77,18 +82,49 @@
     if (role !== 'ADMIN') window.location.href = '/login';
 
     const API_BASE = '/api/admin/usuarios';
+    const ITENS_POR_PAGINA = 8;
+    let todasPessoas = [];
+    let pessoasFiltradas = [];
+    let paginaAtual = 1;
 
     async function carregarPessoas() {
-        const response = await fetch(API_BASE, {
-            headers: { 'x-role': 'ADMIN' }
-        });
+        const response = await fetch(API_BASE, { headers: { 'x-role': 'ADMIN' } });
+        todasPessoas = await response.json();
+        onFiltroChange();
+    }
 
-        const pessoas = await response.json();
+    function onFiltroChange() {
+        paginaAtual = 1;
+        aplicarFiltros();
+    }
 
+    function aplicarFiltros() {
+        const termo = document.getElementById('searchPessoas').value.toLowerCase().trim();
+
+        pessoasFiltradas = todasPessoas.filter(p =>
+            p.nome.toLowerCase().includes(termo)
+        );
+
+        renderizarTabela();
+        renderizarPaginacao();
+    }
+
+    function renderizarTabela() {
         const tbody = document.querySelector('#tabelaPessoas tbody');
         tbody.innerHTML = '';
+        const semResultados = document.getElementById('semResultados');
 
-        pessoas.forEach(p => {
+        if (pessoasFiltradas.length === 0) {
+            semResultados.style.display = 'block';
+            document.getElementById('paginacaoPessoas').innerHTML = '';
+            return;
+        }
+        semResultados.style.display = 'none';
+
+        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+        const paginaPessoas = pessoasFiltradas.slice(inicio, inicio + ITENS_POR_PAGINA);
+
+        paginaPessoas.forEach(p => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${p.nome}</td>
@@ -101,6 +137,35 @@
             `;
             tbody.appendChild(row);
         });
+    }
+
+    function renderizarPaginacao() {
+        const container = document.getElementById('paginacaoPessoas');
+        const totalPaginas = Math.ceil(pessoasFiltradas.length / ITENS_POR_PAGINA);
+
+        if (totalPaginas <= 1) { container.innerHTML = ''; return; }
+
+        let html = `<button class="btn-pag" onclick="irParaPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>&#8249;</button>`;
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            if (i === 1 || i === totalPaginas || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
+                html += `<button class="btn-pag ${i === paginaAtual ? 'active' : ''}" onclick="irParaPagina(${i})">${i}</button>`;
+            } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
+                html += `<span class="pag-ellipsis">…</span>`;
+            }
+        }
+
+        html += `<button class="btn-pag" onclick="irParaPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>&#8250;</button>`;
+        html += `<span class="pag-info">${paginaAtual} de ${totalPaginas}</span>`;
+        container.innerHTML = html;
+    }
+
+    function irParaPagina(pagina) {
+        const totalPaginas = Math.ceil(pessoasFiltradas.length / ITENS_POR_PAGINA);
+        if (pagina < 1 || pagina > totalPaginas) return;
+        paginaAtual = pagina;
+        renderizarTabela();
+        renderizarPaginacao();
     }
 
     async function excluirPessoa(id) {
@@ -169,10 +234,7 @@
 
         const response = await fetch(url, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-role': 'ADMIN'
-            },
+            headers: { 'Content-Type': 'application/json', 'x-role': 'ADMIN' },
             body: JSON.stringify(payload)
         });
 

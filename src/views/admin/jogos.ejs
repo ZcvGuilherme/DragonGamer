@@ -54,19 +54,28 @@
 
         <div class="card">
             <h2>Lista de Jogos</h2>
+            <div class="search-filter-bar">
+                <input type="text" id="searchJogos" placeholder="Pesquisar por nome do jogo..." oninput="onFiltroChange()">
+                <div class="filter-buttons">
+                    <button type="button" id="btnTodos" class="btn-filter active" onclick="setFiltro('TODOS')">Todos</button>
+                    <button type="button" id="btnDisponivel" class="btn-filter btn-filter-disponivel" onclick="setFiltro('DISPONIVEL')">Disponível</button>
+                    <button type="button" id="btnIndisponivel" class="btn-filter btn-filter-indisponivel" onclick="setFiltro('INDISPONIVEL')">Indisponível</button>
+                </div>
+            </div>
             <table id="tabelaJogos">
                 <thead>
                     <tr>
+                        <th class="th-capa">Capa</th>
                         <th>Nome</th>
                         <th>Categoria</th>
                         <th>Status</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Preenchido via JS -->
-                </tbody>
+                <tbody></tbody>
             </table>
+            <p id="semResultados" class="sem-resultados" style="display:none;">Nenhum jogo encontrado.</p>
+            <div class="paginacao" id="paginacaoJogos"></div>
         </div>
     </div>
 
@@ -74,16 +83,67 @@
         const role = localStorage.getItem('role');
         if (role !== 'ADMIN') window.location.href = '/login';
 
+        const ITENS_POR_PAGINA = 8;
+        let todosJogos = [];
+        let jogosFiltrados = [];
+        let filtroStatus = 'TODOS';
+        let paginaAtual = 1;
+
         async function carregarJogos() {
             const response = await fetch('/api/jogos', { headers: { 'x-role': 'ADMIN' } });
-            const jogos = await response.json();
-            
+            todosJogos = await response.json();
+            onFiltroChange();
+        }
+
+        function setFiltro(status) {
+            filtroStatus = status;
+            document.getElementById('btnTodos').classList.toggle('active', status === 'TODOS');
+            document.getElementById('btnDisponivel').classList.toggle('active', status === 'DISPONIVEL');
+            document.getElementById('btnIndisponivel').classList.toggle('active', status === 'INDISPONIVEL');
+            onFiltroChange();
+        }
+
+        function onFiltroChange() {
+            paginaAtual = 1;
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            const termo = document.getElementById('searchJogos').value.toLowerCase().trim();
+
+            jogosFiltrados = todosJogos.filter(jogo => {
+                const nomeMatch = jogo.nome.toLowerCase().includes(termo);
+                const statusMatch = filtroStatus === 'TODOS' || jogo.status === filtroStatus;
+                return nomeMatch && statusMatch;
+            });
+
+            renderizarTabela();
+            renderizarPaginacao();
+        }
+
+        function renderizarTabela() {
             const tbody = document.querySelector('#tabelaJogos tbody');
             tbody.innerHTML = '';
-            
-            jogos.forEach(jogo => {
+            const semResultados = document.getElementById('semResultados');
+
+            if (jogosFiltrados.length === 0) {
+                semResultados.style.display = 'block';
+                document.getElementById('paginacaoJogos').innerHTML = '';
+                return;
+            }
+            semResultados.style.display = 'none';
+
+            const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+            const paginaJogos = jogosFiltrados.slice(inicio, inicio + ITENS_POR_PAGINA);
+
+            paginaJogos.forEach(jogo => {
                 const row = document.createElement('tr');
+                const capaHtml = jogo.capaUrl
+                    ? `<img src="${jogo.capaUrl}" alt="${jogo.nome}" class="tabela-capa" onerror="this.replaceWith(document.createElement('div')); this.className='tabela-capa-vazia'; this.textContent='?'">`
+                    : `<div class="tabela-capa-vazia">?</div>`;
+
                 row.innerHTML = `
+                    <td class="td-capa">${capaHtml}</td>
                     <td>${jogo.nome}</td>
                     <td>${jogo.categoria}</td>
                     <td class="${jogo.status === 'DISPONIVEL' ? 'status-disponivel' : 'status-indisponivel'}">${jogo.status}</td>
@@ -94,6 +154,35 @@
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        function renderizarPaginacao() {
+            const container = document.getElementById('paginacaoJogos');
+            const totalPaginas = Math.ceil(jogosFiltrados.length / ITENS_POR_PAGINA);
+
+            if (totalPaginas <= 1) { container.innerHTML = ''; return; }
+
+            let html = `<button class="btn-pag" onclick="irParaPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>&#8249;</button>`;
+
+            for (let i = 1; i <= totalPaginas; i++) {
+                if (i === 1 || i === totalPaginas || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
+                    html += `<button class="btn-pag ${i === paginaAtual ? 'active' : ''}" onclick="irParaPagina(${i})">${i}</button>`;
+                } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
+                    html += `<span class="pag-ellipsis">…</span>`;
+                }
+            }
+
+            html += `<button class="btn-pag" onclick="irParaPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>&#8250;</button>`;
+            html += `<span class="pag-info">${paginaAtual} de ${totalPaginas}</span>`;
+            container.innerHTML = html;
+        }
+
+        function irParaPagina(pagina) {
+            const totalPaginas = Math.ceil(jogosFiltrados.length / ITENS_POR_PAGINA);
+            if (pagina < 1 || pagina > totalPaginas) return;
+            paginaAtual = pagina;
+            renderizarTabela();
+            renderizarPaginacao();
         }
 
         function prepararEdicao(jogo) {
@@ -127,19 +216,16 @@
                 status: document.getElementById('status').value,
                 capaUrl: document.getElementById('capaUrl').value
             };
-            
+
             const url = id ? `/api/admin/jogos/${id}` : '/api/admin/jogos';
             const method = id ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
                 method: method,
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-role': 'ADMIN'
-                },
+                headers: { 'Content-Type': 'application/json', 'x-role': 'ADMIN' },
                 body: JSON.stringify(payload)
             });
-            
+
             if (response.ok) {
                 alert(id ? 'Jogo atualizado!' : 'Jogo cadastrado!');
                 resetForm();
