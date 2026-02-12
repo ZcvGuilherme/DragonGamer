@@ -53,6 +53,15 @@ class UserController {
       return res.status(500).json({ error: 'Erro ao buscar histórico' });
     }
   }
+
+  async dashboard(req, res) {
+    return res.render('user/dashboard');
+  }
+
+  async listarJogos(req, res) {
+    const jogos = await Jogo.findAll({ where: { disponivel: true } });
+    return res.json(jogos);
+  }
 }
 
 export default new UserController();

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>DragonGamer - Usuário</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>DragonGamer</h1>
+        <div class="nav-links">
+            <a href="/user/jogos">Jogos Disponíveis</a>
+            <a href="/login" onclick="localStorage.clear()">Sair</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Minhas Locações Ativas</h2>
+            <table id="tabelaAtivas">
+                <thead>
+                    <tr>
+                        <th>Jogo</th>
+                        <th>Categoria</th>
+                        <th>Início</th>
+                        <th>Entrega Prevista</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Histórico</h2>
+            <table id="tabelaHistorico">
+                <thead>
+                    <tr>
+                        <th>Jogo</th>
+                        <th>Categoria</th>
+                        <th>Início</th>
+                        <th>Entrega</th>
+                        <th>Multa</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    const role = localStorage.getItem('role');
+    const userId = localStorage.getItem('userId');
+
+    if (role !== 'USER') window.location.href = '/login';
+
+    async function carregarAtivas() {
+        const response = await fetch('/api/user/locacoes/ativas', {
+            headers: {
+                'x-role': 'USER',
+                'x-user-id': userId
+            }
+        });
+
+        const locacoes = await response.json();
+        const tbody = document.querySelector('#tabelaAtivas tbody');
+        tbody.innerHTML = '';
+
+        locacoes.forEach(loc => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${loc.Jogo.nome}</td>
+                    <td>${loc.Jogo.categoria}</td>
+                    <td>${new Date(loc.dataInicio).toLocaleDateString()}</td>
+                    <td>${new Date(loc.dataEntregaPrevista).toLocaleDateString()}</td>
+                </tr>
+            `;
+        });
+    }
+
+    async function carregarHistorico() {
+        const response = await fetch('/api/user/locacoes/historico', {
+            headers: {
+                'x-role': 'USER',
+                'x-user-id': userId
+            }
+        });
+
+        const locacoes = await response.json();
+        const tbody = document.querySelector('#tabelaHistorico tbody');
+        tbody.innerHTML = '';
+
+        locacoes.forEach(loc => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${loc.Jogo.nome}</td>
+                    <td>${loc.Jogo.categoria}</td>
+                    <td>${new Date(loc.dataInicio).toLocaleDateString()}</td>
+                    <td>${new Date(loc.dataEntregaReal).toLocaleDateString()}</td>
+                    <td>R$ ${loc.multa || '0.00'}</td>
+                </tr>
+            `;
+        });
+    }
+
+    carregarAtivas();
+    carregarHistorico();
+</script>
+
+</body>
+</html>

@@ -17,4 +17,16 @@ router.get(
   UserController.historicoLocacoes
 );
 
+router.get(
+  '/dashboard',
+  authorizeRole('USER'),
+  UserController.dashboard
+);
+
+router.get(
+  '/jogos',
+  authorizeRole('USER'),
+  UserController.listarJogos
+);
+
 export default router;

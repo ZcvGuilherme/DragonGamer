@@ -38,6 +38,11 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/admin', (req, res) => res.render('admin/index'));
 app.get('/admin/jogos', (req, res) => res.render('admin/jogos'));
 app.get('/admin/pessoas', (req, res) => res.render('admin/pessoas'));
+app.get('/user', (req, res) => res.render('user/dashboard'));
+app.get('/user/dashboard', (req, res) => res.render('user/dashboard'));
 
+app.get('/user/jogos', (req, res) => {
+  res.render('user/jogos');
+});
 
 export default app;

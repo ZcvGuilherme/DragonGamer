@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>DragonGamer - Jogos</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>DragonGamer</h1>
+    <div class="nav-links">
+        <a href="/user/dashboard">Dashboard</a>
+        <a href="/user/jogos">Jogos Disponíveis</a>
+        <a href="/login" onclick="localStorage.clear()">Sair</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Jogos Disponíveis</h2>
+        <div id="listaJogos" class="jogos-grid"></div>
+    </div>
+</div>
+
+<script>
+    const role = localStorage.getItem('role');
+    if (role !== 'USER') window.location.href = '/login';
+
+    async function carregarJogos() {
+        const response = await fetch('/api/jogos/disponiveis', {
+            headers: { 'x-role': 'USER' }
+        });
+
+        const jogos = await response.json();
+        const container = document.getElementById('listaJogos');
+        container.innerHTML = '';
+
+        jogos.forEach(jogo => {
+            container.innerHTML += `
+                <div class="card jogo-card">
+                    <img src="${jogo.capaUrl || '/img/default-game.png'}" alt="${jogo.nome}" class="jogo-img">
+                    <h3>${jogo.nome}</h3>
+                    <p>${jogo.categoria}</p>
+                    <span class="status-disponivel">Disponível</span>
+                </div>
+            `;
+        });
+    }
+
+    carregarJogos();
+</script>
+
+</body>
+</html>

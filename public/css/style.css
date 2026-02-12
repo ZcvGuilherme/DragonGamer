@@ -295,6 +295,27 @@ th {
 }
 
 /* ============================================
+   Ajuste da imagem dos jogos
+   ============================================ */
+.jogos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.jogo-card {
+    text-align: center;
+    padding: 15px;
+}
+
+.jogo-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* ============================================
    RESPONSIVIDADE
    ============================================ */
 @media (max-width: 768px) {
