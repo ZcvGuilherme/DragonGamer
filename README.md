@@ -225,3 +225,9 @@ Desenvolvido de forma incremental, feature a feature, com separação clara de r
 ## Equipe
 
 Projeto desenvolvido como trabalho acadêmico em equipe com foco em arquitetura clean, segurança e escalabilidade.
+
+- Guilherme Sousa
+- Isaque Ferreira
+- John Viana
+- Waldiney  Vieira
+- Wellingto Carvalho
