@@ -176,12 +176,16 @@ class AdminController {
       }
 
       const dataEntregaReal = new Date();
+      
+      // Normalizar datas para comparação (ignorar horário e timezone)
+      const hoje = new Date(dataEntregaReal.getFullYear(), dataEntregaReal.getMonth(), dataEntregaReal.getDate());
       const prevista = new Date(locacao.dataEntregaPrevista);
+      const dataPrevista = new Date(prevista.getFullYear(), prevista.getMonth(), prevista.getDate());
 
       let multa = 0;
 
-      if (dataEntregaReal > prevista) {
-        const diffTime = dataEntregaReal - prevista;
+      if (hoje > dataPrevista) {
+        const diffTime = hoje - dataPrevista;
         const diasAtraso = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         multa = diasAtraso * 5;
       }

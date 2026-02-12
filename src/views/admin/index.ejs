@@ -82,10 +82,30 @@
                 const response = await fetch('/api/admin/locacoes', {
                     headers: { 'x-role': 'ADMIN' }
                 });
+                
+                if (!response.ok) {
+                    console.error('Erro na resposta:', response.status);
+                    return;
+                }
+                
                 const locacoes = await response.json();
+                console.log('Locações carregadas:', locacoes); // Debug
                 
                 const tbody = document.querySelector('#tabelaLocacoes tbody');
                 tbody.innerHTML = '';
+                
+                if (!locacoes || locacoes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma locação encontrada</td></tr>';
+                    return;
+                }
+                
+                // Função para formatar data sem problemas de timezone
+                const formatarData = (dataISO) => {
+                    if (!dataISO) return 'N/A';
+                    const dataStr = dataISO.split('T')[0]; // Pega apenas YYYY-MM-DD
+                    const [ano, mes, dia] = dataStr.split('-');
+                    return `${dia}/${mes}/${ano}`;
+                };
                 
                 locacoes.forEach(loc => {
                     const row = document.createElement('tr');
@@ -96,8 +116,8 @@
                         <td>${loc.Jogo.nome}</td>
                         <td>${loc.Pessoa.nome}</td>
                         <td class="${statusClass}">${status}</td>
-                        <td>${new Date(loc.dataInicio).toLocaleDateString()}</td>
-                        <td>${new Date(loc.dataEntregaPrevista).toLocaleDateString()}</td>
+                        <td>${formatarData(loc.dataInicio)}</td>
+                        <td>${formatarData(loc.dataEntregaPrevista)}</td>
                         <td>R$ ${loc.multa || '0.00'}</td>
                         <td>
                             ${!loc.dataEntregaReal ? `
