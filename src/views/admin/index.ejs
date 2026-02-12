@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DragonGamer - Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>DragonGamer Admin</h1>
+        <div class="nav-links">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/jogos">Jogos</a>
+            <a href="/admin/pessoas">Pessoas</a>
+            <a href="/login" onclick="localStorage.clear()">Sair</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="button-group-top">
+            <button onclick="window.location.href='/admin/pessoas'">Cadastrar Pessoa</button>
+            <button onclick="window.location.href='/admin/jogos'">Cadastrar Jogo</button>
+            <button onclick="abrirModalLocacao()" class="btn-success">Relacionar Pessoa x Jogo</button>
+        </div>
+
+        <div class="card">
+            <h2>Locações Ativas e Histórico</h2>
+            <table id="tabelaLocacoes">
+                <thead>
+                    <tr>
+                        <th>Jogo</th>
+                        <th>Pessoa</th>
+                        <th>Status</th>
+                        <th>Início</th>
+                        <th>Entrega Prevista</th>
+                        <th>Multa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Locação -->
+    <div id="modalLocacao" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Nova Locação</h2>
+            <form id="formLocacao">
+                <input type="hidden" id="locacaoId">
+                <div id="camposSelecao" class="campos-selecao">
+                    <div class="form-group">
+                        <label>Pessoa</label>
+                        <select id="selectPessoa"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Jogo</label>
+                        <select id="selectJogo"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data de Entrega Prevista</label>
+                    <input type="date" id="dataEntregaPrevista" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" id="btnConfirmar">Confirmar</button>
+                    <button type="button" onclick="fecharModalLocacao()" class="btn-gray">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const role = localStorage.getItem('role');
+        if (role !== 'ADMIN') window.location.href = '/login';
+
+        async function carregarLocacoes() {
+            try {
+                const response = await fetch('/api/admin/locacoes', {
+                    headers: { 'x-role': 'ADMIN' }
+                });
+                
+                if (!response.ok) {
+                    console.error('Erro na resposta:', response.status);
+                    return;
+                }
+                
+                const locacoes = await response.json();
+                console.log('Locações carregadas:', locacoes); // Debug
+                
+                const tbody = document.querySelector('#tabelaLocacoes tbody');
+                tbody.innerHTML = '';
+                
+                if (!locacoes || locacoes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma locação encontrada</td></tr>';
+                    return;
+                }
+                
+                // Função para formatar data sem problemas de timezone
+                const formatarData = (dataISO) => {
+                    if (!dataISO) return 'N/A';
+                    const dataStr = dataISO.split('T')[0]; // Pega apenas YYYY-MM-DD
+                    const [ano, mes, dia] = dataStr.split('-');
+                    return `${dia}/${mes}/${ano}`;
+                };
+                
+                locacoes.forEach(loc => {
+                    const row = document.createElement('tr');
+                    const status = loc.dataEntregaReal ? 'Finalizada' : 'Ativa';
+                    const statusClass = loc.dataEntregaReal ? 'status-disponivel' : 'status-indisponivel';
+                    
+                    row.innerHTML = `
+                        <td>${loc.Jogo.nome}</td>
+                        <td>${loc.Pessoa.nome}</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td>${formatarData(loc.dataInicio)}</td>
+                        <td>${formatarData(loc.dataEntregaPrevista)}</td>
+                        <td>R$ ${loc.multa || '0.00'}</td>
+                        <td>
+                            ${!loc.dataEntregaReal ? `
+                                <button onclick="finalizarLocacao(${loc.id})" class="btn-small btn-success">Finalizar</button>
+                                <button onclick='prepararEdicao(${JSON.stringify(loc)})' class="btn-small btn-warning">Editar</button>
+                            ` : `
+                                <button onclick="excluirLocacao(${loc.id})" class="btn-small btn-danger">Limpar</button>
+                            `}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar locações:', error);
+            }
+        }
+
+        async function finalizarLocacao(id) {
+            if (!confirm('Deseja finalizar esta locação?')) return;
+            const response = await fetch(`/api/admin/locacoes/${id}/devolucao`, {
+                method: 'PUT',
+                headers: { 'x-role': 'ADMIN' }
+            });
+            if (response.ok) carregarLocacoes();
+        }
+
+        async function excluirLocacao(id) {
+            if (!confirm('Deseja remover este registro do histórico?')) return;
+            const response = await fetch(`/api/admin/locacoes/${id}`, {
+                method: 'DELETE',
+                headers: { 'x-role': 'ADMIN' }
+            });
+            if (response.ok) carregarLocacoes();
+        }
+
+        function prepararEdicao(loc) {
+            document.getElementById('modalTitle').textContent = 'Editar Data de Entrega';
+            document.getElementById('locacaoId').value = loc.id;
+            document.getElementById('camposSelecao').classList.add('hide');
+            document.getElementById('dataEntregaPrevista').value = loc.dataEntregaPrevista.split('T')[0];
+            document.getElementById('btnConfirmar').textContent = 'Atualizar Data';
+            document.getElementById('modalLocacao').classList.add('show');
+        }
+
+        function abrirModalLocacao() {
+            document.getElementById('modalTitle').textContent = 'Nova Locação';
+            document.getElementById('locacaoId').value = '';
+            document.getElementById('camposSelecao').classList.remove('hide');
+            document.getElementById('btnConfirmar').textContent = 'Confirmar';
+            document.getElementById('modalLocacao').classList.add('show');
+            carregarOpcoes();
+        }
+
+        function fecharModalLocacao() {
+            document.getElementById('modalLocacao').classList.remove('show');
+        }
+
+        async function carregarOpcoes() {
+            const [resPessoas, resJogos] = await Promise.all([
+                fetch('/api/admin/usuarios', { headers: { 'x-role': 'ADMIN' } }),
+                fetch('/api/jogos/disponiveis', { headers: { 'x-role': 'ADMIN' } })
+            ]);
+            const pessoas = await resPessoas.json();
+            const jogos = await resJogos.json();
+            document.getElementById('selectPessoa').innerHTML = pessoas.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+            document.getElementById('selectJogo').innerHTML = jogos.map(j => `<option value="${j.id}">${j.nome}</option>`).join('');
+        }
+
+        document.getElementById('formLocacao').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('locacaoId').value;
+            const payload = { dataEntregaPrevista: document.getElementById('dataEntregaPrevista').value };
+            
+            let url = '/api/admin/locacoes';
+            let method = 'POST';
+
+            if (id) {
+                url = `/api/admin/locacoes/${id}`;
+                method = 'PUT';
+            } else {
+                payload.pessoaId = document.getElementById('selectPessoa').value;
+                payload.jogoId = document.getElementById('selectJogo').value;
+            }
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'x-role': 'ADMIN' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response.ok) {
+                fecharModalLocacao();
+                carregarLocacoes();
+            }
+        });
+
+        carregarLocacoes();
+    </script>
+</body>
+</html>

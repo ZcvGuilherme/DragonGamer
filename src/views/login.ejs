@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DragonGamer - Login</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container login-container">
+        <div class="card">
+            <h1 class="login-title">DRAGON GAMER</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="matricula">Matrícula</label>
+                    <input type="text" id="matricula" name="matricula" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" required>
+                </div>
+                <button type="submit" class="btn-full-width">ENTRAR</button>
+            </form>
+            <p id="message" class="login-message"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const matricula = document.getElementById('matricula').value;
+            const senha = document.getElementById('senha').value;
+
+            try {
+                const response = await fetch('api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matricula, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('user', JSON.stringify(data));
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('userId', data.id);
+                    
+                    if (data.role === 'ADMIN') {
+                        window.location.href = '/admin';
+                    } else {
+                        window.location.href = '/user';
+                    }
+                } else {
+                    document.getElementById('message').textContent = data.error || 'Erro ao fazer login';
+                }
+            } catch (error) {
+                console.error('Erro detalhado:', error);
+                document.getElementById('message').textContent = 'Erro de conexão: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
