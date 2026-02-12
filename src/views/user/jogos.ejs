@@ -19,7 +19,12 @@
 <div class="container">
     <div class="card">
         <h2>Jogos Disponíveis</h2>
+        <div class="search-filter-bar">
+            <input type="text" id="searchJogos" placeholder="Pesquisar por nome do jogo..." oninput="onFiltroChange()">
+        </div>
         <div id="listaJogos" class="jogos-grid"></div>
+        <p id="semResultados" class="sem-resultados" style="display:none;">Nenhum jogo encontrado.</p>
+        <div class="paginacao" id="paginacaoJogos"></div>
     </div>
 </div>
 
@@ -27,16 +32,51 @@
     const role = localStorage.getItem('role');
     if (role !== 'USER') window.location.href = '/login';
 
+    const ITENS_POR_PAGINA = 12;
+    let todosJogos = [];
+    let jogosFiltrados = [];
+    let paginaAtual = 1;
+
     async function carregarJogos() {
         const response = await fetch('/api/jogos/disponiveis', {
             headers: { 'x-role': 'USER' }
         });
+        todosJogos = await response.json();
+        onFiltroChange();
+    }
 
-        const jogos = await response.json();
+    function onFiltroChange() {
+        paginaAtual = 1;
+        aplicarFiltros();
+    }
+
+    function aplicarFiltros() {
+        const termo = document.getElementById('searchJogos').value.toLowerCase().trim();
+
+        jogosFiltrados = todosJogos.filter(jogo =>
+            jogo.nome.toLowerCase().includes(termo)
+        );
+
+        renderizarGrid();
+        renderizarPaginacao();
+    }
+
+    function renderizarGrid() {
         const container = document.getElementById('listaJogos');
         container.innerHTML = '';
+        const semResultados = document.getElementById('semResultados');
 
-        jogos.forEach(jogo => {
+        if (jogosFiltrados.length === 0) {
+            semResultados.style.display = 'block';
+            document.getElementById('paginacaoJogos').innerHTML = '';
+            return;
+        }
+        semResultados.style.display = 'none';
+
+        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+        const paginaJogos = jogosFiltrados.slice(inicio, inicio + ITENS_POR_PAGINA);
+
+        paginaJogos.forEach(jogo => {
             container.innerHTML += `
                 <div class="card jogo-card">
                     <img src="${jogo.capaUrl || '/img/default-game.png'}" alt="${jogo.nome}" class="jogo-img">
@@ -46,6 +86,36 @@
                 </div>
             `;
         });
+    }
+
+    function renderizarPaginacao() {
+        const container = document.getElementById('paginacaoJogos');
+        const totalPaginas = Math.ceil(jogosFiltrados.length / ITENS_POR_PAGINA);
+
+        if (totalPaginas <= 1) { container.innerHTML = ''; return; }
+
+        let html = `<button class="btn-pag" onclick="irParaPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>&#8249;</button>`;
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            if (i === 1 || i === totalPaginas || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
+                html += `<button class="btn-pag ${i === paginaAtual ? 'active' : ''}" onclick="irParaPagina(${i})">${i}</button>`;
+            } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
+                html += `<span class="pag-ellipsis">…</span>`;
+            }
+        }
+
+        html += `<button class="btn-pag" onclick="irParaPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>&#8250;</button>`;
+        html += `<span class="pag-info">${paginaAtual} de ${totalPaginas}</span>`;
+        container.innerHTML = html;
+    }
+
+    function irParaPagina(pagina) {
+        const totalPaginas = Math.ceil(jogosFiltrados.length / ITENS_POR_PAGINA);
+        if (pagina < 1 || pagina > totalPaginas) return;
+        paginaAtual = pagina;
+        renderizarGrid();
+        renderizarPaginacao();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     carregarJogos();
